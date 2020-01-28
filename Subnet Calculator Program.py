@@ -43,17 +43,44 @@ def convert_to_decimal(x):
             + str(seventh_num) + str(eight_num))
 
 
-ip_addr = input()               # 192.168.0.1
-mask = int(input())             # 24
-#include_decimal = bool(input())
-#wildcard_mask = ""
+while True:
+    ip_addr = input("Enter an IP address: ")        # 192.168.0.1
+
+    # Check if the IP Address input is valid:
+    # it is checked that 4 octets are typed in
+    # link-local IPv4 APIPA addresses, loopback addresses and well-known multicast addresses are also excluded
+    ip_octet = ip_addr.split('.')
+    # print(type(ip_octet))
+    if (len(ip_octet) == 4) and (1 <= int(ip_octet[0]) <= 223) and (int(ip_octet[0]) != 127) and (
+            int(ip_octet[0]) != 169 or int(ip_octet[1]) != 254) and (
+            0 <= int(ip_octet[1]) <= 255 and 0 <= int(ip_octet[2]) <= 255 and 0 <= int(ip_octet[3]) <= 255):
+        # If the input is valid the loop is stopped and the program continues
+        break
+    else:
+        print("The IP address is not valid!")
+        continue
+
+# TODO: Add a case when the mask is /32 ?? - special case with just a single address)
+while True:
+    mask = int(input("Enter mask: /"))             # 24
+    # Check validity
+    if 8 <= mask <= 30:
+        # Mask is valid.
+        break
+    else:
+        print("The mask is not valid!")
+        continue
+
+
+# include_decimal = bool(input())
+# wildcard_mask = ""
 network_addr = ""
 broadcast_addr = ""
-#host_min = ""
-#host_max = ""
-#total_hosts = 0
+# host_min = ""
+# host_max = ""
+# total_hosts = 0
 # power_var is used to calculate the total usable host addresses in a subnet
-#power_var = 0
+# power_var = 0
 
 
 
@@ -65,15 +92,15 @@ second_octet = int(ip_address[1])
 third_octet = int(ip_address[2])
 fourth_octet = int(ip_address[3])
 # Check type:
-print(type(first_octet))
+# print(type(first_octet))
 # Print octets - TESTING
-print("TEST OUTPUT FOR OCTETS")
-print(first_octet)
-print(second_octet)
-print(third_octet)
-print(fourth_octet)
-print("TEST OUTPUT over")
-print()
+# print("TEST OUTPUT FOR OCTETS")
+# print(first_octet)
+# print(second_octet)
+# print(third_octet)
+# print(fourth_octet)
+# print("TEST OUTPUT over")
+# print()
 
 
 # Deal with Subnet Mask
@@ -91,7 +118,7 @@ second_oct_m = 255
 third_oct_m = 255
 fourth_oct_m = 255
 # target_oct - variable to get the mask value for a single octet if mask has variable subnet length
-#target_oct = 0
+# target_oct = 0
 mask_power_value = mask % 8
 target_oct = 2 ** (8 - mask_power_value)
 
@@ -106,22 +133,19 @@ elif mask >= 8:
     third_oct_m = 0
     fourth_oct_m = 0
 elif mask < 8:
-    # TODO: Add error handling
+    # TODO: Add error handling?
     print("Incorrect mask:")
 
 
 
 
-#print("DECIMAL MASK:")
+# print("DECIMAL MASK:")
 decimal_mask = str(first_oct_m) + '.' + str(second_oct_m) + '.' + str(third_oct_m) + '.' + str(fourth_oct_m)
 print(f"MASK: {decimal_mask} - /{mask}")
-#print(decimal_mask)
+# print(decimal_mask)
 
-# TODO Get wildcard mask
-# WILDCARD MASK = 255.255.255.255 - subnet mask
-# /30 example:
-# Mask = 255.255.255.252
-# Wildcard = 0.0.0.3
+# Get wildcard mask
+
 wildcard_mask = str(255 - first_oct_m) + '.' + str(255 - second_oct_m) + '.' + str(255 - third_oct_m) + '.' \
                 + str(255 - fourth_oct_m)
 
@@ -129,8 +153,8 @@ print(f"WILDCARD: {wildcard_mask}")
 
 
 # Printing Decimal representation for the input IP ADDRESS:
-#if include_decimal == "Yes":
-    # Print decimal conversion from the IP address
+# if include_decimal == "Yes":
+#     Print decimal conversion from the IP address
 #    print()
 
 # TODO: Move this decimal stuff after each printed element (network address, first/last host address etc.
@@ -142,15 +166,11 @@ print(convert_to_decimal(third_octet), end=".")
 print(convert_to_decimal(fourth_octet))
 
 
-
-
 # Calculate total usable host addresses:
 power_var = 32 - mask                   # variable to get the power used to calculate the total and usable addresses
 total_hosts = 2 ** power_var            # total addresses in a subnet
 # usable host addresses in a subnet are the total addresses - network and broadcast addresses
 usable_hosts = total_hosts - 2          # usable host addresses in the subnet
-
-
 
 
 # Calculate network address and available subnets:
@@ -159,46 +179,29 @@ network_address_list = []               # a list of all network/subnet IDs is de
 for i in range(0, 255, total_hosts):
     network_address_list.append(i)
 
-print(network_address_list)
+print(network_address_list)             # THIS IS A TEST PRINT
 max_subnets = len(network_address_list)
 print(f"max subnets: {max_subnets}")
-#print(network_address_list)
+# print(network_address_list)
 
 
 # Find the network address from the network_address_list
 for each_address in network_address_list:
-    # TODO: check this loop again, it takes the next value of each_address - "off by one issue"
-    # Example to test:
-    # IP Address: 192.168.0.200/28
-    # MASK: 255.255.255.240 - /28
-    # WILDCARD: 0.0.0.15
-    # Decimal representation:
-    # 11000000.10101000.00000000.11001000
-    # [0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240]
-    # max subnets: 16
-    # Network Address: 192.168.0.192    - correct
-    # First host: 192.168.0.209         - INCORRECT (uses 208 from the list)
-    # Last host: 192.168.0.222          - INCORRECT (uses 208 for the calculations)
-    # Broadcast Addr: 192.168.0.223     - INCORRECT (uses 208 from the list)
-    # Usable hosts: 14
     if fourth_octet >= each_address:
-        network_addr = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' + str(each_address)
+        # We need an additional variable for the last octet of the network address (subnet_id_octet)
+        # If we don't have it, the loop will cycle once more and the calculations
+        # for host_min, host_max and broadcast_addr will be incorrect (off by one issue)
+        subnet_id_octet = each_address
+        network_addr = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' + str(subnet_id_octet)
     else:
         break
 
-
-
 # Get First Host, Last Host and Broadcast Addresses:
-# TODO It is currently incorrect:
-# "each_address" gets incremented by the loop above and always the biggest network address is used for the calculations
-# to either add host_min, host_max and broadcast_addr in the for loop above or:
-# to store network_addr in list instead of a string and use index to get it's last element for the calculations below
-host_min = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' + str(each_address + 1)
-host_max = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' + str(each_address + usable_hosts)
+
+host_min = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' + str(subnet_id_octet + 1)
+host_max = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' + str(subnet_id_octet + usable_hosts)
 broadcast_addr = str(first_octet) + '.' + str(second_octet) + '.' + str(third_octet) + '.' \
-                 + str(each_address + usable_hosts + 1)
-
-
+                 + str(subnet_id_octet + usable_hosts + 1)
 
 # PRINT RESULTS:
 
@@ -209,13 +212,6 @@ print(f"Broadcast Addr: {broadcast_addr}")
 print(f"Usable hosts: {usable_hosts}")
 
 
-
-#if include_decimal == "Yes":
-    # Print decimal conversion from the IP address
-#    print()
-
-
-
-
-
-
+# if include_decimal == "Yes":
+#     Print decimal conversion from the IP address
+#     print()
